@@ -1,6 +1,6 @@
-# Algorand Foundation Analytics - Multi-Container Platform (MCP) Servers
+# Algorand Foundation Analytics - Model Context Protocol (MCP) Servers
 
-This repository hosts the **Model Context Platform (MCP)** servers utilized by the Algorand Foundation (AF) Business Intelligence (BI) team. These servers are essential for automating the data retrieval and processing required to generate our routine weekly and monthly reports.
+This repository hosts the **Model Context Protocol (MCP)** servers utilized by the Algorand Foundation (AF) Business Intelligence (BI) team. These servers are essential for automating the data retrieval and processing required to generate our routine weekly and monthly reports.
 
 ---
 
