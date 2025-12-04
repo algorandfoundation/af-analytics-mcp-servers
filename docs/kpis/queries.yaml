@@ -1,0 +1,54 @@
+weekly_transactions:
+  description: Get the weekly transactions
+  sql: |
+    SELECT WEEK as end_of_week,
+           count(*) as txns
+    FROM mainnet.txn
+    WHERE toDate(realtime) between DATE(WEEK - INTERVAL 6 DAY) AND DATE(WEEK)
+
+weekly_wallets:
+  description: Get the weekly created wallets count 
+  sql: |
+    SELECT WEEK as end_of_week,
+           count(*) as wallets
+    FROM mainnet.account
+    WHERE toDate(created_at_rt) between DATE(WEEK - INTERVAL 6 DAY) AND DATE(WEEK)
+
+weekly_active_users:
+  description: Get the weekly active users on chain
+  sql: |
+    SELECT WEEK as end_of_week,
+           count(distinct snd_addr_id) as mau
+    FROM mainnet.txn
+    WHERE toDate(realtime) between DATE(WEEK - INTERVAL 6 DAY) AND DATE(WEEK)
+
+online_accounts:
+  description: Get the current online accounts
+  sql: |
+    SELECT WEEK as end_of_week,
+           onl
+    FROM mainnet_allo.online_stake_total
+    WHERE toDate(ts) = WEEK
+    ORDER BY ts DESC
+    LIMIT 1
+
+online_stake:
+  description: Get the current online stake
+  sql: |
+    SELECT WEEK as end_of_week,
+           stake/1e6 as stake
+    FROM mainnet_allo.online_stake_total
+    WHERE toDate(ts) = WEEK
+    ORDER BY ts DESC
+    LIMIT 1
+
+algokit_downloads:
+  description: Get the weekly algokit downloads
+  sql: |
+    SELECT COUNT(*) AS python_downloads
+    FROM `bigquery-public-data.pypi.file_downloads` 
+    WHERE DATE(timestamp) BETWEEN DATE(WEEK - INTERVAL 6 DAY) AND WEEK
+          AND file.project = 'algokit'
+          AND CAST(SPLIT(file.version, '.')[OFFSET(0)] AS INT64) >= 2
+          AND details.distro.version NOT IN ('18.04', '16.04')
+          AND details.distro.name NOT IN ('Alpine Linux', 'Amazon Linux');

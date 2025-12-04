@@ -1,0 +1,184 @@
+monthly_transactions:
+  description: Get the total transactions count at month end
+  sql: |
+    SELECT PREV_MONTH as end_of_month,
+           count(*) as txns
+    FROM mainnet.txn
+    WHERE toDate(realtime) <= PREV_MONTH
+    UNION ALL
+    SELECT CURR_MONTH as end_of_month,
+           count(*) as txns
+    FROM mainnet.txn
+    WHERE toDate(realtime) <= CURR_MONTH
+monthly_wallets:
+  description: Get the total wallets count at month end
+  sql: |
+    SELECT PREV_MONTH as end_of_month,
+           count(*) as wallets
+    FROM mainnet.account
+    WHERE toDate(created_at_rt) <= PREV_MONTH
+    UNION ALL
+    SELECT CURR_MONTH as end_of_month,
+           count(*) as wallets
+    FROM mainnet.account
+    WHERE toDate(created_at_rt) <= CURR_MONTH
+monthly_active_users:
+  description: Get the Monthly active users on chain
+  sql: |
+    SELECT PREV_MONTH as end_of_month,
+           count(distinct snd_addr_id) as mau
+    FROM mainnet.txn
+    WHERE toDate(realtime) BETWEEN START_1 AND PREV_MONTH
+    UNION ALL
+    SELECT CURR_MONTH as end_of_month,
+           count(distinct snd_addr_id) as mau
+    FROM mainnet.txn
+    WHERE toDate(realtime) between START_2 and CURR_MONTH
+online_accounts:
+  description: Get the current online accounts
+  sql: |
+    SELECT PREV_MONTH as end_of_month,
+           onl
+    FROM mainnet_allo.online_stake_total
+    WHERE toDate(ts) = PREV_MONTH
+    ORDER BY ts DESC
+    LIMIT 1
+    UNION ALL
+    SELECT CURR_MONTH as end_of_month,
+           onl
+    FROM mainnet_allo.online_stake_total
+    WHERE toDate(ts) = CURR_MONTH
+    ORDER BY ts DESC
+    LIMIT 1
+online_stake:
+  description: Get the current online stake
+  sql: |
+    SELECT PREV_MONTH as end_of_month,
+           stake/1e6 as stake
+    FROM mainnet_allo.online_stake_total
+    WHERE toDate(ts) = PREV_MONTH
+    ORDER BY ts DESC
+    LIMIT 1
+    UNION ALL
+    SELECT CURR_MONTH as end_of_month,
+           stake/1e6 as stake
+    FROM mainnet_allo.online_stake_total
+    WHERE toDate(ts) = CURR_MONTH
+    ORDER BY ts DESC
+    LIMIT 1
+contracts_deployed:
+  description: Get the monthly smart contracts deployed
+  sql: |
+    SELECT PREV_MONTH as end_of_month,
+           COUNT(*) as contracts
+    FROM mainnet.txn
+    WHERE toDate(realtime) BETWEEN START_1 AND PREV_MONTH
+      AND type_ext = 'app_call_create'
+    UNION ALL
+    SELECT CURR_MONTH as end_of_month,
+           COUNT(*) as contracts
+    FROM mainnet.txn
+    WHERE toDate(realtime) BETWEEN START_2 AND CURR_MONTH
+    AND type_ext = 'app_call_create'
+asa_created:
+  description: Get the monthly asas created
+  sql: |
+    SELECT PREV_MONTH as end_of_month,
+           COUNT(*) as contracts
+    FROM mainnet.txn
+    WHERE toDate(realtime) BETWEEN START_1 AND PREV_MONTH
+      AND type_ext = 'asa_create'
+    UNION ALL
+    SELECT CURR_MONTH as end_of_month,
+           COUNT(*) as contracts
+    FROM mainnet.txn
+    WHERE toDate(realtime) BETWEEN START_2 AND CURR_MONTH
+      AND type_ext = 'asa_create' 
+fees_collected:
+  description: Get the monthly fees collected
+  sql: |
+    SELECT PREV_MONTH as end_of_month,
+           SUM(fee)/1e6 as fees_collected
+    FROM mainnet.txn
+    WHERE toDate(realtime) BETWEEN START_1 AND PREV_MONTH
+    UNION ALL
+    SELECT CURR_MONTH as end_of_month,
+           SUM(fee)/1e6 as fees
+    FROM mainnet.txn
+    WHERE toDate(realtime) BETWEEN START_2 AND CURR_MONTH
+payouts_paid:
+  description: Get the monthly payouts paid
+  sql: |
+    SELECT PREV_MONTH as end_of_month,
+           SUM(amount)/1e6 as payouts
+    FROM mainnet.txn
+    WHERE toDate(realtime) BETWEEN '2025-01-01' AND PREV_MONTH
+      and snd_addr_id = 90
+      and toString(base64Decode(note)) like 'ProposerPayout%'
+    UNION ALL
+    SELECT CURR_MONTH as end_of_month,
+           SUM(amount)/1e6 as payouts
+    FROM mainnet.txn
+    WHERE toDate(realtime) BETWEEN '2025-01-01' AND CURR_MONTH
+      and snd_addr_id = 90
+      and toString(base64Decode(note)) like 'ProposerPayout%'
+gross_issuance:
+  description: Get the cumulative AF gross token issuance
+  sql: |
+    SELECT PREV_MONTH as end_of_month,
+           SUM(amount)/1e6 as issuance
+    FROM mainnet.txn
+    WHERE toDate(realtime) BETWEEN '2025-01-01' AND PREV_MONTH
+      and rcv_addr_id = 90
+      and amount/1e6 > 1000
+    UNION ALL
+    SELECT CURR_MONTH as end_of_month,
+           SUM(amount)/1e6 as issuance
+    FROM mainnet.txn
+    WHERE toDate(realtime) BETWEEN '2025-01-01' AND CURR_MONTH
+      and rcv_addr_id = 90
+      and amount/1e6 > 1000
+fees_collected_cumulative:
+  description: Get cumulative fees collected
+  sql: |
+    WITH fees_paid AS (
+       SELECT toDate(realtime) AS dt, 
+              sum(fee)/1e6 AS fees_paid
+       FROM mainnet.txn 
+       GROUP BY dt 
+       ORDER BY dt 
+    ),
+    cumulatives as (
+       SELECT 
+              dt,
+              SUM(COALESCE(fees_paid, 0)) OVER (ORDER BY dt ROWS UNBOUNDED PRECEDING) AS cumulative_fees_paid
+       FROM fees_paid
+       ORDER BY dt
+    )
+    SELECT PREV_MONTH as end_of_month, 
+       cumulative_fees_paid as fees_collected 
+    FROM cumulatives 
+    WHERE dt = PREV_MONTH
+    UNION ALL
+    SELECT CURR_MONTH as end_of_month, 
+       cumulative_fees_paid as fees_collected 
+    FROM cumulatives 
+    WHERE dt = CURR_MONTH
+fee_sink_balance:
+  description: Get the fee sink balance
+  sql: >-
+    WITH fee_sink_history AS ( SELECT toDate(realtime) AS date,
+    sum(microAlgosDelta::Int128)/1e6 AS stake_change FROM
+    `mainnet_agg`.`account_deltas_hourly` WHERE id = 90 GROUP BY date ORDER BY
+    date ), date_range AS ( SELECT min(date) AS min_date, max(date) AS max_date
+    FROM fee_sink_history ), all_dates AS ( SELECT arrayJoin( arrayMap(x ->
+    toDate(min_date + toIntervalDay(x)), range(0, dateDiff('day', min_date,
+    max_date) + 1)) ) AS date FROM date_range ), complete_history AS ( SELECT
+    ad.date, COALESCE(fsh.stake_change, 0) AS stake_change FROM all_dates ad
+    LEFT JOIN fee_sink_history fsh ON ad.date = fsh.date ORDER BY ad.date ),
+    balance_agg AS ( SELECT date, stake_change, SUM(stake_change) OVER (ORDER BY
+    date ROWS UNBOUNDED PRECEDING) AS fee_sink_balance FROM complete_history
+    ORDER BY date ) SELECT PREV_MONTH as end_of_month, fee_sink_balance FROM
+    balance_agg WHERE date = PREV_MONTH UNION ALL SELECT CURR_MONTH as
+    end_of_month, fee_sink_balance as fee_sink_balance FROM balance_agg WHERE
+    date = CURR_MONTH

@@ -1,0 +1,29 @@
+[project]
+name = "paul"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "anthropic>=0.52.1",
+    "bs4>=0.0.2",
+    "clickhouse-connect>=0.8.17",
+    "google-cloud-bigquery>=3.34.0",
+    "gspread>=6.2.1",
+    "gspread-formatting>=1.2.1",
+    "httpx>=0.28.1",
+    "langchain-anthropic>=0.3.22",
+    "langchain-ollama>=0.3.6",
+    "mcp-server>=0.1.4",
+    "mcp-use>=1.3.0",
+    "mcp[cli]>=1.9.1",
+    "numpy>=2.2.6",
+    "pandas>=2.2.3",
+    "pyyaml>=6.0.2",
+    "requests>=2.32.3",
+]
+
+[tool.uv.workspace]
+members = [
+    "paul",
+]

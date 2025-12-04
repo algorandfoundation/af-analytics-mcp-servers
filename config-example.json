@@ -1,0 +1,22 @@
+{
+    "mcpServers": {
+        "paul": {
+            "command": "uv path",
+            "args": [
+                "--directory",
+                "path to your project",
+                "run",
+                "algo_insights_server.py"
+            ]
+        },
+        "maria": {
+            "command": "uv path",
+            "args": [
+                "--directory",
+                "path to your project",
+                "run",
+                "weekly_kpis_server.py"
+            ]
+        }
+    }
+  }
